@@ -1,0 +1,21 @@
+chrome.storage:
+[
+	{
+		host:"hostname",
+		roomId: "id",
+		platform: "http://www.panda.tv",
+		notifyTime: "xxxxx"
+	}
+]
+
+
+###
+		info.host = data.hostinfo.name
+			info.status =  data.videoinfo.status === "2" ? "online" : "offline"
+			info.roomName = data.roominfo.name
+			info.roomId = data.roominfo.id
+			// info.startTime = common.formatTime(new Date(data.roominfo.start_time * 1000))
+			// info.endTime = common.formatTime(new Date(data.roominfo.end_time * 1000))
+			info.startTime = data.roominfo.start_time * 1000
+			info.endTime = data.roominfo.end_time * 1000
+			info.platform = "http://www.panda.tv"

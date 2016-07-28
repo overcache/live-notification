@@ -21,7 +21,8 @@
 		"http://www.panda.tv/",
 		"storage",
 		"notifications",
-		"background"
+		"background",
+		"tabs"
 	],
 	"options_ui": {
 		"page": "options.html"

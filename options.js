@@ -1,41 +1,49 @@
 var common = chrome.extension.getBackgroundPage()
 
-var deleteRoom = function() {
+function unsubscribeHandler() {
 	var ul = document.getElementById("subsciption")
 	var item = this.parentElement
-	var room = this.previousSibling
+	var roomId = this.previousSibling.title
 
-	common.popRoom(room)
+	common.unsubscribe(roomId)
 	ul.removeChild(item)
 }
 
-var addRoom = function() {
-	var room = document.getElementById("room-id").value
+function subscribeHandler() {
+	var roomIdText = document.getElementById("room-id").value
 	var ul = document.getElementById("subsciption")
-	ul.appendChild(createItem(room))
 
-	common.pushRoom(room)
-}
+	var info = common.requestInfoSync(roomIdText)
+	if (info.host !== "") {
+		ul.appendChild(createItem(info.host, info.roomId))
+		common.subscribe(info)
+	} else {
+			//TODO: no host. Inform user.
+			console.log("no host")
+		}
+	}
 
-var createItem = function(text) {
+function createItem(host, roomId) {
 	var newItem = document.createElement("li")
-	var newContent = document.createTextNode(text)
+	var newSpan = document.createElement("span")
+	newSpan.textContent = host
+	newSpan.title = roomId
 	var newButton = document.createElement("button")
-	newButton.textContent = "delete"
+	newButton.textContent = "取消订阅"
 	newButton.className = "del-btn"
-	newButton.addEventListener("click", deleteRoom)
-	newItem.appendChild(newContent)
+	newButton.addEventListener("click", unsubscribeHandler)
+	newItem.appendChild(newSpan)
 	newItem.appendChild(newButton)
 	return newItem
 }
 
-var initList = function(rooms) {
+var initList = function(subscription) {
 	var ul = document.getElementById("subsciption")
-	for(var i = 0; i < rooms.length; i = i + 1) {
-		ul.appendChild(createItem(rooms[i]))
+	for(var i = 0; i < subscription.length; i = i + 1) {
+		ul.appendChild(createItem(subscription[i].host, subscription[i].roomId))
 	}
 }
 
-common.getRooms(initList)
+common.getSubscription(initList)
 
-document.getElementById("add-btn").addEventListener("click", addRoom)
+document.getElementById("add-btn").addEventListener("click", subscribeHandler)
