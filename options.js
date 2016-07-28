@@ -3,7 +3,7 @@ var common = chrome.extension.getBackgroundPage()
 function unsubscribeHandler() {
 	var ul = document.getElementById("subsciption")
 	var item = this.parentElement
-	var roomId = this.previousSibling
+	var roomId = this.previousSibling.title
 
 	common.unsubscribe(roomId)
 	ul.removeChild(item)
@@ -13,16 +13,15 @@ function subscribeHandler() {
 	var roomIdText = document.getElementById("room-id").value
 	var ul = document.getElementById("subsciption")
 
-	common.requestInfo(roomIdText, function(info) {
-		if (info.host !== "") {
-			ul.appendChild(createItem(info.host, info.roomId))
-			common.subscribe(info)
-		} else {
+	var info = common.requestInfoSync(roomIdText)
+	if (info.host !== "") {
+		ul.appendChild(createItem(info.host, info.roomId))
+		common.subscribe(info)
+	} else {
 			//TODO: no host. Inform user.
 			console.log("no host")
 		}
-	})
-}
+	}
 
 function createItem(host, roomId) {
 	var newItem = document.createElement("li")
