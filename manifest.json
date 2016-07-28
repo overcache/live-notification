@@ -6,7 +6,7 @@
 	// "default_locale": "zh_cn",
 	"description": "关注直播平台的主播，开播时发送提醒",
 	"icons": {
-		"128": "eye128.png"
+		"128": "icon128.png"
 	},
 
 	"background": {
@@ -24,7 +24,7 @@
 		"background"
 	],
 	"options_ui": {
-		"page": "options.html",
-		"chrome_style": true
+		"page": "options.html"
+		// "chrome_style": true
 	}
 }

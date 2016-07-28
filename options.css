@@ -1,13 +1,13 @@
 button {
-	padding: 5px !important;
-	margin: 5px !important;
-	border: none !important;
-	background-color: red !important;
-	color: white !important;
-	text-shadow: none !important;
-	background-image: none !important;
+	padding: 5px;
+	margin: 5px;
+	border: none;
+	background-color: red;
+	color: white;
+	text-shadow: none;
+	background-image: none;
 	cursor: pointer;
 }
 button#add-btn {
-	background-color: green !important;
+	background-color: green;
 }

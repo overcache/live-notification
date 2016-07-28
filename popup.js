@@ -24,14 +24,14 @@ function createDiv(info) {
 }
 
 
-common.getRooms(function(rooms) {
+common.getSubscription(function(subscription) {
 	var content = document.getElementById("content")
-	for(var i = 0; i < rooms.length; i = i + 1) {
-		common.fetchData(rooms[i], function(info) {
+	for(var i = 0; i < subscription.length; i = i + 1) {
+		common.requestInfo(subscription[i], function(info) {
 			var el = createDiv(info)
 			content.appendChild(el)
 		})
 	}
 })
 
-document.getElementById("go-to-options").addEventListener("click", common.goToOptions)
+document.getElementById("go-to-options").addEventListener("click", common.openOptionsPage)
