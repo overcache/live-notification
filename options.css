@@ -1,0 +1,13 @@
+button {
+	padding: 5px !important;
+	margin: 5px !important;
+	border: none !important;
+	background-color: red !important;
+	color: white !important;
+	text-shadow: none !important;
+	background-image: none !important;
+	cursor: pointer;
+}
+button#add-btn {
+	background-color: green !important;
+}

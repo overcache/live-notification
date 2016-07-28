@@ -1,0 +1,30 @@
+{
+	"manifest_version": 2,
+	"name": "开播提醒",
+	"version": "1.0",
+
+	// "default_locale": "zh_cn",
+	"description": "关注直播平台的主播，开播时发送提醒",
+	"icons": {
+		"128": "eye128.png"
+	},
+
+	"background": {
+		"scripts": ["common.js", "background.js"]
+	},
+	"browser_action": {
+		"default_popup": "popup.html"
+	},
+
+	"author": "WunderEye",
+	"permissions": [
+		"http://www.panda.tv/",
+		"storage",
+		"notifications",
+		"background"
+	],
+	"options_ui": {
+		"page": "options.html",
+		"chrome_style": true
+	}
+}
