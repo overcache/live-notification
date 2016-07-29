@@ -1,11 +1,9 @@
-var common = chrome.extension.getBackgroundPage()
-
 function unsubscribeHandler() {
 	var ul = document.getElementById("subscriptions")
 	var item = this.parentElement
 	var roomIdText = this.previousSibling.title
 
-	common.unsubscribe(roomIdText)
+	unsubscribe(roomIdText)
 	ul.removeChild(item)
 }
 
@@ -13,18 +11,20 @@ function subscribeHandler() {
 	var roomIdText = document.getElementById("room-id").value
 	var pattern = /^[0-9]+$/
 	if (pattern.test(roomIdText) === false) {
-		common.showNotification("房号不合法", "目前PANDA.TV房间号只由数字组成.", false)
+		showNotification("房号不合法", "目前PANDA.TV房间号只由数字组成.", false)
 		return
 	}
-	var ul = document.getElementById("subscriptions")
-
-	var responseJson = common.requestInfo(roomIdText, false)
-	if (responseJson.errno === 0) {
-		ul.appendChild(createItem(responseJson.data.hostinfo.name, responseJson.data.roominfo.id))
-		common.subscribe(responseJson)
-	} else {
-		common.showNotification("无法订阅", responseJson.errmsg, false)
-	}
+	// showNotification("正在查询房间号: ", roomIdText, false)
+	requestInfo(roomIdText, function(info) {
+		console.log(info)
+		if (info.errno === 0) {
+			var ul = document.getElementById("subscriptions")
+			ul.appendChild(createItem(info.hostName, info.roomId))
+			subscribe(info)
+		} else {
+			showNotification("无法订阅", info.errmsg, false)
+		}
+	})
 }
 
 function createItem(host, id) {
@@ -41,15 +41,15 @@ function createItem(host, id) {
 	return newItem
 }
 
-var initList = function(subscriptions) {
+function initList(subscriptions) {
 	var ul = document.getElementById("subscriptions")
 	for(var i = 0; i < subscriptions.length; i = i + 1) {
-		var temp = createItem(subscriptions[i].data.hostinfo.name, subscriptions[i].data.roominfo.id)
-		ul.appendChild(temp)
+		var li = createItem(subscriptions[i].hostName, subscriptions[i].roomId)
+		ul.appendChild(li)
 	}
 }
 
 //显示订阅列表
-common.getSubscriptions(initList)
+getSubscriptions(initList)
 
 document.getElementById("add-btn").addEventListener("click", subscribeHandler)

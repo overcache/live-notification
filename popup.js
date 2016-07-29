@@ -1,7 +1,5 @@
 //TODO: 当用户没有订阅任何主播时，提供提示
 
-var common = chrome.extension.getBackgroundPage()
-
 //info{host,status,startTime,endTime,roomName, roomId}
 function createDiv(subscription) {
 	var newDiv = document.createElement("div")
@@ -15,10 +13,10 @@ function createDiv(subscription) {
 	var time = ""
 	if (subscription.videoinfo.status === "2") {
 		status = "正在直播"
-		time = common.formatTime(new Date(subscription.roominfo.start_time * 1000)) + " ~ 现在"
+		time = formatTime(new Date(subscription.roominfo.start_time * 1000)) + " ~ 现在"
 	} else {
 		status = "休息中"
-		time = common.formatTime(new Date(subscription.roominfo.start_time * 1000)) + " ~ " + common.formatTime(new Date(subscription.roominfo.end_time * 1000))
+		time = formatTime(new Date(subscription.roominfo.start_time * 1000)) + " ~ " + formatTime(new Date(subscription.roominfo.end_time * 1000))
 	}
 	var values = [status, subscription.roominfo.id, subscription.roominfo.name, time]
 	for(var i = 0; i < names.length; i = i + 1) {
@@ -53,14 +51,14 @@ function createDiv(subscription) {
 }
 
 
-common.getSubscriptions(function(subscriptions) {
+getSubscriptions(function(subscriptions) {
 	var content = document.getElementById("content")
 	for(var i = 0; i < subscriptions.length; i = i + 1) {
-		// common.requestInfo(subscriptions[i].roomId, function(info) {
+		// requestInfo(subscriptions[i].roomId, function(info) {
 			var el = createDiv(subscriptions[i])
 			content.appendChild(el)
 		// })
 	}
 })
 
-document.getElementById("go-to-options").addEventListener("click", common.openOptionsPage)
+document.getElementById("go-to-options").addEventListener("click", openOptionsPage)

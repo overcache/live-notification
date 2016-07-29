@@ -1,15 +1,13 @@
-var common = chrome.extension.getBackgroundPage()
-
-function isOnline(responseJson) {
-	if (responseJson.errno !== 0) {
-		console.log("check host is online or not error.", responseJson.errmsg)
+function isOnline(info) {
+	if (info.errno !== 0) {
+		console.log("check host is online or not error.", info.errmsg)
 		return
 	} else {
-		common.getSubscription(responseJson.data.roominfo.id, function(subscription) {
-			if (responseJson.data.roominfo.status === "2" && subscription.data.roominfo.status !== "2") {
-				common.showNotification("活捉正在直播的" + responseJson.data.hostinfo.name, "点击本通知跳转观看", true)
+		getSubscription(info.roomId, function(subscription) {
+			if (info.status === "2" && subscription.status !== "2") {
+				showNotification("活捉正在直播的" + info.data.hostinfo.name, "点击本通知跳转观看", true)
 			}
-			common.updateSubscription(responseJson)
+			updateSubscription(info)
 		})
 	}
 }
@@ -17,10 +15,10 @@ function isOnline(responseJson) {
 
 function checkSubscriptions(subscriptions) {
 	for(var i = 0; i < subscriptions.length; i = i + 1) {
-		common.requestInfo(subscriptions[i].data.roominfo.id, isOnline)
+		requestInfo(subscriptions[i].roomId, isOnline)
 	}
 }
 
 setInterval(function(){
-	common.getSubscriptions(checkSubscriptions)
-}, 600000)
+	getSubscriptions(checkSubscriptions)
+}, 60000000)
