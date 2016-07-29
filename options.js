@@ -1,33 +1,37 @@
 var common = chrome.extension.getBackgroundPage()
 
 function unsubscribeHandler() {
-	var ul = document.getElementById("subsciption")
+	var ul = document.getElementById("subscriptions")
 	var item = this.parentElement
-	var roomId = this.previousSibling.title
+	var roomIdText = this.previousSibling.title
 
-	common.unsubscribe(roomId)
+	common.unsubscribe(roomIdText)
 	ul.removeChild(item)
 }
 
 function subscribeHandler() {
 	var roomIdText = document.getElementById("room-id").value
-	var ul = document.getElementById("subsciption")
-
-	var info = common.requestInfoSync(roomIdText)
-	if (info.host !== "") {
-		ul.appendChild(createItem(info.host, info.roomId))
-		common.subscribe(info)
-	} else {
-			//TODO: no host. Inform user.
-			console.log("no host")
-		}
+	var pattern = /^[0-9]+$/
+	if (pattern.test(roomIdText) === false) {
+		common.showNotification("房号不合法", "目前PANDA.TV房间号只由数字组成.", false)
+		return
 	}
+	var ul = document.getElementById("subscriptions")
 
-function createItem(host, roomId) {
+	var responseJson = common.requestInfo(roomIdText, false)
+	if (responseJson.errno === 0) {
+		ul.appendChild(createItem(responseJson.data.hostinfo.name, responseJson.data.roominfo.id))
+		common.subscribe(responseJson)
+	} else {
+		common.showNotification("无法订阅", responseJson.errmsg, false)
+	}
+}
+
+function createItem(host, id) {
 	var newItem = document.createElement("li")
 	var newSpan = document.createElement("span")
 	newSpan.textContent = host
-	newSpan.title = roomId
+	newSpan.title = id
 	var newButton = document.createElement("button")
 	newButton.textContent = "取消订阅"
 	newButton.className = "del-btn"
@@ -37,13 +41,15 @@ function createItem(host, roomId) {
 	return newItem
 }
 
-var initList = function(subscription) {
-	var ul = document.getElementById("subsciption")
-	for(var i = 0; i < subscription.length; i = i + 1) {
-		ul.appendChild(createItem(subscription[i].host, subscription[i].roomId))
+var initList = function(subscriptions) {
+	var ul = document.getElementById("subscriptions")
+	for(var i = 0; i < subscriptions.length; i = i + 1) {
+		var temp = createItem(subscriptions[i].data.hostinfo.name, subscriptions[i].data.roominfo.id)
+		ul.appendChild(temp)
 	}
 }
 
-common.getSubscription(initList)
+//显示订阅列表
+common.getSubscriptions(initList)
 
 document.getElementById("add-btn").addEventListener("click", subscribeHandler)

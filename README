@@ -19,3 +19,9 @@ chrome.storage:
 			info.startTime = data.roominfo.start_time * 1000
 			info.endTime = data.roominfo.end_time * 1000
 			info.platform = "http://www.panda.tv"
+
+
+###
+var INFO
+var roomId = "2009"
+INFO = common.requestInfo(roomId, false)

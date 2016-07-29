@@ -24,67 +24,23 @@ function openOptionsPage() {
 	}
 }
 
-function requestInfo(id, callback) {
-	console.log("requestInfo is being called")
+function requestInfo(id, async, callback) {
 	var xhr = new XMLHttpRequest()
-	xhr.responseType = "json"
-	xhr.open("GET", "http://www.panda.tv/api_room_v2?roomid=" + id)
-	xhr.onload = function() {
-		var info = {
-			host: "",
-			roomName: "",
-			roomId: "",
-			status: "",
-			startTime: "",
-			endTime: "",
-			platform: "",
+	xhr.open("GET", "http://www.panda.tv/api_room_v2?roomid=" + id, async)
+	if (async) {
+		if (callback === undefined) {
+			console.error("A callback must be offered.")
+			return
 		}
-		var data = this.response.data
-		if (data !== "{}") {
-			info.host = data.hostinfo.name
-			info.status =  data.videoinfo.status === "2" ? "online" : "offline"
-			info.roomName = data.roominfo.name
-			info.roomId = data.roominfo.id
-			// info.startTime = common.formatTime(new Date(data.roominfo.start_time * 1000))
-			// info.endTime = common.formatTime(new Date(data.roominfo.end_time * 1000))
-			info.startTime = data.roominfo.start_time * 1000
-			info.endTime = data.roominfo.end_time * 1000
-			info.platform = "http://www.panda.tv"
+		xhr.responseType = "json"
+		xhr.onload = function() {
+			callback(this.response)
 		}
-
-		callback(info)
+		xhr.send(null)
+	} else {
+		xhr.send(null)
+		return JSON.parse(xhr.responseText)
 	}
-	xhr.send(null)
-}
-
-function requestInfoSync(id) {
-	console.log("requestInfoSync is being called")
-	var xhr = new XMLHttpRequest()
-	// xhr.responseType = "json"
-	xhr.open("GET", "http://www.panda.tv/api_room_v2?roomid=" + id, false)
-	xhr.send(null)
-
-	var info = {
-		host: "",
-		roomName: "",
-		roomId: "",
-		status: "",
-		startTime: "",
-		endTime: ""
-	}
-	var data = JSON.parse(xhr.response).data
-	if (data !== "{}") {
-		info.host = data.hostinfo.name
-		info.status =  data.videoinfo.status === "2" ? "online" : "offline"
-		info.roomName = data.roominfo.name
-		info.roomId = data.roominfo.id
-		// info.startTime = common.formatTime(new Date(data.roominfo.start_time * 1000))
-		// info.endTime = common.formatTime(new Date(data.roominfo.end_time * 1000))
-		info.startTime = data.roominfo.start_time * 1000
-		info.endTime = data.roominfo.end_time * 1000
-		info.platform = "http://www.panda.tv"
-	}
-	return info
 }
 
 function showNotification(title, message, requireInteraction) {
@@ -98,81 +54,58 @@ function showNotification(title, message, requireInteraction) {
 	chrome.notifications.create(opt)
 }
 
-function getSubscription(callback) {
+function getSubscriptions(callback) {
 	chrome.storage.sync.get({
-		subscription: []
+		subscriptions: []
 	}, function(items) {
-		callback(items.subscription)
+		callback(items.subscriptions)
 	})
 }
 
-function saveSubscription(subscription, callback) {
-	chrome.storage.sync.set({
-		subscription: subscription
-	}, callback)
-}
-
-function updateSubscription(info) {
-	getSubscription(function(subscription) {
-		for(var i = 0; i < subscription.length; i = i + 1) {
-			if (subscription[i].roomId === info.roomId) {
-				subscription[i] = info
-				saveSubscription(subscription)
+function getSubscription(id, callback) {
+	getSubscriptions(function(subscriptions) {
+		for(var i = 0; i < subscriptions.length; i = i + 1) {
+			if (subscriptions[i].data.roominfo.id === id) {
+				callback(subscriptions[i])
 			}
 		}
 	})
 }
 
-function subscribe(info) {
-	getSubscription(function(subscription) {
-		subscription.push(info)
-		saveSubscription(subscription, function() {
-			showNotification("已订阅：", info.host, false)
+function saveSubscriptions(subscriptions, callback) {
+	chrome.storage.sync.set({
+		subscriptions: subscriptions
+	}, callback)
+}
+
+
+function updateSubscription(responseJson) {
+	getSubscriptions(function(subscriptions) {
+		for(var i = 0; i < subscriptions.length; i = i + 1) {
+			if (subscriptions[i].data.roominfo.id === responseJson.data.roominfo.id) {
+				subscriptions[i] = responseJson
+				saveSubscriptions(subscriptions[i])
+			}
+		}
+	})
+}
+
+function subscribe(responseJson) {
+	getSubscriptions(function(subscriptions) {
+		subscriptions.push(responseJson)
+		saveSubscriptions(subscriptions, function() {
+			showNotification("已订阅：", responseJson.data.hostinfo.name, false)
 		})
 	})
 }
 
-function unsubscribe(roomId) {
-	getSubscription(function(subscription) {
-		for(var i = 0; i < subscription.length; i = i + 1) {
-			if (subscription[i].roomId === roomId)	{
-				subscription.splice(i, 1)
+function unsubscribe(id) {
+	getSubscriptions(function(subscriptions) {
+		for(var i = 0; i < subscriptions.length; i = i + 1) {
+			if (subscriptions[i].data.roominfo.id === id)	{
+				subscriptions.splice(i, 1)
 			}
 		}
-		saveSubscription(subscription)
+		saveSubscriptions(subscriptions)
 	})
-}
-
-function getNotifyTime(roomId, callback) {
-	chrome.storage.sync.get({
-		notifyTime: []
-	}, function(items) {
-		var times = items.notifyTime
-		for(var i = 0; i < times.length; i = i + 1) {
-			if (times[i].roomId === roomId) {
-				callback(times[i].time)
-			}
-		}
-	})
-}
-
-function updateNotifyTime(roomId, time) {
-	chrome.storage.sync.get({
-		notifyTime: []
-	}, function(items) {
-		var times = items.notifyTime
-		for(var i = 0; i < times.length; i = i + 1) {
-			if (times[i].roomId === roomId) {
-				times[i].time = time
-				chrome.storage.sync.set({
-					notifyTime: times
-				}, function() { console.log(times)})
-			}
-		}
-	})
-}
-
-
-function print(msg) {
-	console.log(msg)
 }
