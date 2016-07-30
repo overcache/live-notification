@@ -12,20 +12,33 @@ function subscribeHandler() {
 	var pattern = /^[0-9]+$/
 	if (pattern.test(roomIdText) === false) {
 		showNotification("房号不合法", "目前PANDA.TV房间号只由数字组成.", false)
-		return
+		// feedback("error", "房号不合法: 目前PANDA.TV房间号只由数字组成.")
+		return 1
 	}
-	// showNotification("正在查询房间号: ", roomIdText, false)
-	requestInfo(roomIdText, function(info) {
-		console.log(info)
-		if (info.errno === 0) {
-			var ul = document.getElementById("subscriptions")
-			ul.appendChild(createItem(info.hostName, info.roomId))
-			subscribe(info)
-		} else {
-			showNotification("无法订阅", info.errmsg, false)
+
+	var info = requestInfoSync(roomIdText)
+	if (info.errno === 0) {
+		// var ul = document.getElementById("subscriptions")
+		// ul.appendChild(createItem(info.hostName, info.roomId))
+		subscribe(info)
+		// feedback("sucess", "成功订阅: " + info.hostName)
+		var msg = "该直播目前休息中."
+		var requireInteraction = false
+		if (info.status === "2") {
+			msg = "该主播目前正在直播，点击本通知观看。"
+			requireInteraction = true
 		}
-	})
+		showNotification("成功订阅: " + info.hostName, msg, requireInteraction)
+		return 0
+	} else {
+		showNotification("无法订阅", info.errmsg, false)
+		return 1
+		// feedback("error", "无法订阅: " + info.errmsg)
+	}
+
+
 }
+
 
 function createItem(host, id) {
 	var newItem = document.createElement("li")
@@ -41,15 +54,15 @@ function createItem(host, id) {
 	return newItem
 }
 
-function initList(subscriptions) {
+(function initList() {
 	var ul = document.getElementById("subscriptions")
+	var subscriptions = getSubscriptions()
 	for(var i = 0; i < subscriptions.length; i = i + 1) {
 		var li = createItem(subscriptions[i].hostName, subscriptions[i].roomId)
 		ul.appendChild(li)
 	}
-}
+})()
 
 //显示订阅列表
-getSubscriptions(initList)
 
 document.getElementById("add-btn").addEventListener("click", subscribeHandler)

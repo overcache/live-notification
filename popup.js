@@ -5,20 +5,27 @@ function createDiv(subscription) {
 	var newDiv = document.createElement("div")
 	newDiv.className = "host"
 	var newH2 = document.createElement("h2")
-	newH2.textContent = subscription.hostinfo.name
+	newH2.textContent = subscription.hostName
 	var newHr = document.createElement("hr")
 	var newUl = document.createElement("ul")
-	var names = ["状态: ", "房间号: ", "房间名: ", "最近直播: "]
+	var names = ["查询时间: ", "状态: ", "房间号: ", "房间名: ", "最近直播: "]
 	var status = ""
 	var time = ""
-	if (subscription.videoinfo.status === "2") {
+	var now = (new Date()).valueOf()
+	var fetchTime = Math.round((now - subscription.fetchTime) / 60000)
+	var fetchmsg = fetchTime + " 分钟前"
+	if (fetchTime <= 1) {
+		fetchmsg = "刚刚"
+	}
+
+	if (subscription.status === "2") {
 		status = "正在直播"
-		time = formatTime(new Date(subscription.roominfo.start_time * 1000)) + " ~ 现在"
+		time = formatTime(new Date(subscription.startTime)) + " ~ 现在"
 	} else {
 		status = "休息中"
-		time = formatTime(new Date(subscription.roominfo.start_time * 1000)) + " ~ " + formatTime(new Date(subscription.roominfo.end_time * 1000))
+		time = formatTime(new Date(subscription.startTime)) + " ~ " + formatTime(new Date(subscription.endTime))
 	}
-	var values = [status, subscription.roominfo.id, subscription.roominfo.name, time]
+	var values = [fetchmsg, status, subscription.roomId, subscription.roomName, time]
 	for(var i = 0; i < names.length; i = i + 1) {
 		var newItem = document.createElement("li")
 
@@ -28,10 +35,10 @@ function createDiv(subscription) {
 		newNameSpan.className = "name"
 
 		var newValueEl
-		if (i === 0) {
+		if (i === 1) {
 			newValueEl = document.createElement("a")
-			newValueEl.className = "value " + (subscription.videoinfo.status === "2" ? "online" : "offline")
-			newValueEl.href = "http://www.panda.tv/" + subscription.roominfo.id
+			newValueEl.className = "value " + (subscription.status === "2" ? "online" : "offline")
+			newValueEl.href = "http://www.panda.tv/" + subscription.roomId
 			newValueEl.addEventListener("click", function() {
 				chrome.tabs.create({url: this.href})
 			})
@@ -51,14 +58,11 @@ function createDiv(subscription) {
 }
 
 
-getSubscriptions(function(subscriptions) {
-	var content = document.getElementById("content")
-	for(var i = 0; i < subscriptions.length; i = i + 1) {
-		// requestInfo(subscriptions[i].roomId, function(info) {
-			var el = createDiv(subscriptions[i])
-			content.appendChild(el)
-		// })
-	}
-})
+var subscriptions = getSubscriptions()
+var content = document.getElementById("content")
+for(var i = 0; i < subscriptions.length; i++) {
+	var el = createDiv(subscriptions[i])
+	content.appendChild(el)
+}
 
 document.getElementById("go-to-options").addEventListener("click", openOptionsPage)
