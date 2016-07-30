@@ -1,33 +1,50 @@
-var common = chrome.extension.getBackgroundPage()
-
 function unsubscribeHandler() {
-	var ul = document.getElementById("subsciption")
+	var ul = document.getElementById("subscriptions")
 	var item = this.parentElement
-	var roomId = this.previousSibling.title
+	var roomIdText = this.previousSibling.title
 
-	common.unsubscribe(roomId)
+	unsubscribe(roomIdText)
 	ul.removeChild(item)
 }
 
 function subscribeHandler() {
 	var roomIdText = document.getElementById("room-id").value
-	var ul = document.getElementById("subsciption")
-
-	var info = common.requestInfoSync(roomIdText)
-	if (info.host !== "") {
-		ul.appendChild(createItem(info.host, info.roomId))
-		common.subscribe(info)
-	} else {
-			//TODO: no host. Inform user.
-			console.log("no host")
-		}
+	var pattern = /^[0-9]+$/
+	if (pattern.test(roomIdText) === false) {
+		showNotification("房号不合法", "目前PANDA.TV房间号只由数字组成.", false)
+		// feedback("error", "房号不合法: 目前PANDA.TV房间号只由数字组成.")
+		return 1
 	}
 
-function createItem(host, roomId) {
+	var info = requestInfoSync(roomIdText)
+	if (info.errno === 0) {
+		// var ul = document.getElementById("subscriptions")
+		// ul.appendChild(createItem(info.hostName, info.roomId))
+		subscribe(info)
+		// feedback("sucess", "成功订阅: " + info.hostName)
+		var msg = "该直播目前休息中."
+		var requireInteraction = false
+		if (info.status === "2") {
+			msg = "该主播目前正在直播，点击本通知观看。"
+			requireInteraction = true
+		}
+		showNotification("成功订阅: " + info.hostName, msg, requireInteraction)
+		return 0
+	} else {
+		showNotification("无法订阅", info.errmsg, false)
+		return 1
+		// feedback("error", "无法订阅: " + info.errmsg)
+	}
+
+
+}
+
+
+function createItem(host, id) {
 	var newItem = document.createElement("li")
 	var newSpan = document.createElement("span")
 	newSpan.textContent = host
-	newSpan.title = roomId
+	newSpan.title = id
 	var newButton = document.createElement("button")
 	newButton.textContent = "取消订阅"
 	newButton.className = "del-btn"
@@ -37,13 +54,15 @@ function createItem(host, roomId) {
 	return newItem
 }
 
-var initList = function(subscription) {
-	var ul = document.getElementById("subsciption")
-	for(var i = 0; i < subscription.length; i = i + 1) {
-		ul.appendChild(createItem(subscription[i].host, subscription[i].roomId))
+(function initList() {
+	var ul = document.getElementById("subscriptions")
+	var subscriptions = getSubscriptions()
+	for(var i = 0; i < subscriptions.length; i = i + 1) {
+		var li = createItem(subscriptions[i].hostName, subscriptions[i].roomId)
+		ul.appendChild(li)
 	}
-}
+})()
 
-common.getSubscription(initList)
+//显示订阅列表
 
 document.getElementById("add-btn").addEventListener("click", subscribeHandler)

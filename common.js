@@ -25,66 +25,24 @@ function openOptionsPage() {
 }
 
 function requestInfo(id, callback) {
-	console.log("requestInfo is being called")
 	var xhr = new XMLHttpRequest()
-	xhr.responseType = "json"
 	xhr.open("GET", "http://www.panda.tv/api_room_v2?roomid=" + id)
+	if (callback === undefined) {
+		console.error("A callback must be offered.")
+		return
+	}
+	xhr.responseType = "json"
 	xhr.onload = function() {
-		var info = {
-			host: "",
-			roomName: "",
-			roomId: "",
-			status: "",
-			startTime: "",
-			endTime: "",
-			platform: "",
-		}
-		var data = this.response.data
-		if (data !== "{}") {
-			info.host = data.hostinfo.name
-			info.status =  data.videoinfo.status === "2" ? "online" : "offline"
-			info.roomName = data.roominfo.name
-			info.roomId = data.roominfo.id
-			// info.startTime = common.formatTime(new Date(data.roominfo.start_time * 1000))
-			// info.endTime = common.formatTime(new Date(data.roominfo.end_time * 1000))
-			info.startTime = data.roominfo.start_time * 1000
-			info.endTime = data.roominfo.end_time * 1000
-			info.platform = "http://www.panda.tv"
-		}
-
-		callback(info)
+		callback(kiss(xhr.response))
 	}
 	xhr.send(null)
 }
 
 function requestInfoSync(id) {
-	console.log("requestInfoSync is being called")
 	var xhr = new XMLHttpRequest()
-	// xhr.responseType = "json"
 	xhr.open("GET", "http://www.panda.tv/api_room_v2?roomid=" + id, false)
 	xhr.send(null)
-
-	var info = {
-		host: "",
-		roomName: "",
-		roomId: "",
-		status: "",
-		startTime: "",
-		endTime: ""
-	}
-	var data = JSON.parse(xhr.response).data
-	if (data !== "{}") {
-		info.host = data.hostinfo.name
-		info.status =  data.videoinfo.status === "2" ? "online" : "offline"
-		info.roomName = data.roominfo.name
-		info.roomId = data.roominfo.id
-		// info.startTime = common.formatTime(new Date(data.roominfo.start_time * 1000))
-		// info.endTime = common.formatTime(new Date(data.roominfo.end_time * 1000))
-		info.startTime = data.roominfo.start_time * 1000
-		info.endTime = data.roominfo.end_time * 1000
-		info.platform = "http://www.panda.tv"
-	}
-	return info
+	return kiss(JSON.parse(xhr.response))
 }
 
 function showNotification(title, message, requireInteraction) {
@@ -98,81 +56,96 @@ function showNotification(title, message, requireInteraction) {
 	chrome.notifications.create(opt)
 }
 
-function getSubscription(callback) {
-	chrome.storage.sync.get({
-		subscription: []
-	}, function(items) {
-		callback(items.subscription)
-	})
+function getSubscriptions() {
+	var str = localStorage.getItem("subscriptions") || "[]"
+	return JSON.parse(str)
 }
 
-function saveSubscription(subscription, callback) {
-	chrome.storage.sync.set({
-		subscription: subscription
-	}, callback)
-}
-
-function updateSubscription(info) {
-	getSubscription(function(subscription) {
-		for(var i = 0; i < subscription.length; i = i + 1) {
-			if (subscription[i].roomId === info.roomId) {
-				subscription[i] = info
-				saveSubscription(subscription)
-			}
+function getSubscription(id) {
+	var subscriptions = getSubscriptions()
+	for (var i = 0; i < subscriptions.length; i++) {
+		if (subscriptions[i].roomId === id) {
+			return subscriptions[i]
 		}
-	})
+	}
+	return null
+}
+
+function saveSubscriptions(subscriptions) {
+	var str = JSON.stringify(subscriptions)
+	localStorage.setItem("subscriptions", str)
+}
+
+
+function updateSubscriptions(info) {
+	var subscriptions = getSubscriptions()
+	for(var i = 0; i < subscriptions.length; i++) {
+		if (subscriptions[i].roomId === info.roomId) {
+			subscriptions[i] = info
+			saveSubscriptions(subscriptions)
+			return 0
+		}
+	}
+	console.log("没有订阅该主播，无法更新状态")
+	return 1
 }
 
 function subscribe(info) {
-	getSubscription(function(subscription) {
-		subscription.push(info)
-		saveSubscription(subscription, function() {
-			showNotification("已订阅：", info.host, false)
-		})
-	})
+	if (getSubscription(info.roomId) !== null) {
+		showNotification("您已订阅过该主播。", info.hostName, false)
+	} else {
+		var subscriptions = getSubscriptions()
+		subscriptions.push(info)
+		saveSubscriptions(subscriptions)
+		// showNotification("成功订阅主播：", info.hostName, false)
+	}
 }
 
-function unsubscribe(roomId) {
-	getSubscription(function(subscription) {
-		for(var i = 0; i < subscription.length; i = i + 1) {
-			if (subscription[i].roomId === roomId)	{
-				subscription.splice(i, 1)
+function unsubscribe(id) {
+	if (getSubscription(id) === null) {
+		showNotification("没有订阅该主播, 无法取消订阅：", id, false)
+		return 1
+	} else {
+		var subscriptions = getSubscriptions()
+		for(var i = 0; i < subscriptions.length; i++) {
+			if (subscriptions[i].roomId === id)	{
+				subscriptions.splice(i, 1)
+				saveSubscriptions(subscriptions)
+				return 0
 			}
 		}
-		saveSubscription(subscription)
-	})
+	}
 }
 
-function getNotifyTime(roomId, callback) {
-	chrome.storage.sync.get({
-		notifyTime: []
-	}, function(items) {
-		var times = items.notifyTime
-		for(var i = 0; i < times.length; i = i + 1) {
-			if (times[i].roomId === roomId) {
-				callback(times[i].time)
-			}
-		}
-	})
+function kiss(responseJson) {
+	return {
+		hostName: responseJson.data.hostinfo.name,
+		hostAvartar: responseJson.data.hostinfo.avatar,
+		roomName: responseJson.data.roominfo.name,
+		roomId: responseJson.data.roominfo.id,
+		roomImg: responseJson.data.roominfo.pictures.img,
+		startTime: responseJson.data.roominfo.start_time * 1000,
+		endTime: responseJson.data.roominfo.end_time * 1000,
+		status: responseJson.data.videoinfo.status,
+		errno: responseJson.errno,
+		errmsg: responseJson.errmsg,
+		fetchTime: String((new Date()).valueOf())
+	}
 }
 
-function updateNotifyTime(roomId, time) {
-	chrome.storage.sync.get({
-		notifyTime: []
-	}, function(items) {
-		var times = items.notifyTime
-		for(var i = 0; i < times.length; i = i + 1) {
-			if (times[i].roomId === roomId) {
-				times[i].time = time
-				chrome.storage.sync.set({
-					notifyTime: times
-				}, function() { console.log(times)})
-			}
-		}
-	})
+function checkSubscription(info) {
+	var subscription = getSubscription(info.roomId)
+	if (info.errno !== 0) {
+		console.log("check host is online or not error.", info.errmsg)
+	} else if (info.status === "2" && subscription.status !== "2") {
+		showNotification("活捉正在直播的" + info.hostName, "点击本通知跳转观看", true)
+	}
+	updateSubscriptions(info)
 }
 
-
-function print(msg) {
-	console.log(msg)
+function checkSubscriptions() {
+	var subscriptions = getSubscriptions()
+	for(var i = 0; i < subscriptions.length; i++) {
+		requestInfo(subscriptions[i].roomId, checkSubscription)
+	}
 }

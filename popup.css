@@ -1,5 +1,5 @@
 body {
-	width: 350px;
+	width: 300px;
 }
 
 div#content {
@@ -35,7 +35,8 @@ a {
 }
 
 a:hover {
-	border-bottom: 3px solid blue;
+	/*border-bottom: 3px solid blue;*/
+	background-color: blue;
 }
 
 span.name {
