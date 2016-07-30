@@ -3,6 +3,7 @@ body {
 	margin: 20px auto;
 	font-size: 14px;
 	/*border: 1px solid red;*/
+	color: #333;
 }
 h2 {
 	text-align: center;
@@ -18,20 +19,13 @@ ul {
 ul li {
 	width: 100%;
 	margin: 0 auto;
-
 }
 
-form {
-	width: 90%;
-	margin: 0 auto;
-	padding: 0;
-}
-
-form input {
+input {
 	height: 16px;
 	display: inline-block;
-	width: 69%;
-	margin: 0 auto;
+	width: 61%;
+	margin: 0 4%;
 	padding: 0;
 	text-align: center;
 }
@@ -64,4 +58,22 @@ hr {
 	border: 0;
 	border-bottom: 1px solid #ccc;
 	/*box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);*/
+}
+
+div#form-wrap {
+	width: 90%;
+	margin: 0 auto;
+}
+p#feedback {
+	width: 55%;
+	text-align: right;
+	margin: -2% 10%;
+	font-size: 10px;
+}
+
+.sucess {
+	color: green;
+}
+.error {
+	color: red;
 }

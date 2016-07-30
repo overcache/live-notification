@@ -1,10 +1,27 @@
 body {
 	width: 300px;
+	padding: 0;
+	margin: 10px 0;
+	color: #333;
 }
 
 div#content {
-	width: 90%;
-	margin: 10px auto;
+	width: 100%;
+	padding: 0;
+	margin: 0 auto 0;
+	float: right;
+}
+
+div.host {
+	padding: 0 10px;
+}
+
+div.host:hover {
+	background-color: #eee;
+	cursor: pointer;
+}
+div.host:hover a {
+	background-color: blue;
 }
 
 h2 {
@@ -31,7 +48,6 @@ a {
 	display: inline-block;
 	padding: 2px 5px;
 	text-decoration: none;
-	border-bottom: 3px solid white;
 }
 
 a:hover {
@@ -65,5 +81,8 @@ hr {
 
 button {
 	display: block;
+	padding: 5px 15px;
 	float: right;
+	margin-right: 10px;
+	/*margin-bottom: -10px;*/
 }

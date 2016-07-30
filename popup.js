@@ -8,7 +8,7 @@ function createDiv(subscription) {
 	newH2.textContent = subscription.hostName
 	var newHr = document.createElement("hr")
 	var newUl = document.createElement("ul")
-	var names = ["查询时间: ", "状态: ", "房间号: ", "房间名: ", "最近直播: "]
+	var names = ["查询时间: ", "状态: ", "房间: ", "最近直播: "]
 	var status = ""
 	var time = ""
 	var now = (new Date()).valueOf()
@@ -25,7 +25,7 @@ function createDiv(subscription) {
 		status = "休息中"
 		time = formatTime(new Date(subscription.startTime)) + " ~ " + formatTime(new Date(subscription.endTime))
 	}
-	var values = [fetchmsg, status, subscription.roomId, subscription.roomName, time]
+	var values = [fetchmsg, status, subscription.roomName, time]
 	for(var i = 0; i < names.length; i = i + 1) {
 		var newItem = document.createElement("li")
 
@@ -38,10 +38,6 @@ function createDiv(subscription) {
 		if (i === 1) {
 			newValueEl = document.createElement("a")
 			newValueEl.className = "value " + (subscription.status === "2" ? "online" : "offline")
-			newValueEl.href = "http://www.panda.tv/" + subscription.roomId
-			newValueEl.addEventListener("click", function() {
-				chrome.tabs.create({url: this.href})
-			})
 		} else {
 			newValueEl = document.createElement("span")
 			newValueEl.className = "value"
@@ -54,13 +50,17 @@ function createDiv(subscription) {
 	newDiv.appendChild(newUl)
 	newDiv.appendChild(newHr)
 
+	newDiv.addEventListener("click", function() {
+		chrome.tabs.create({url: subscription.site + subscription.roomId})
+	})
+
 	return newDiv
 }
 
 
 var subscriptions = getSubscriptions()
 var content = document.getElementById("content")
-for(var i = 0; i < subscriptions.length; i++) {
+for(var i = 0; i < subscriptions.length; i += 1) {
 	var el = createDiv(subscriptions[i])
 	content.appendChild(el)
 }
