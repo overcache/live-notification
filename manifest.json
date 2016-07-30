@@ -19,6 +19,7 @@
 	"author": "WunderEye",
 	"permissions": [
 		"http://www.panda.tv/",
+		"http://*.pdim.gs/",
 		"storage",
 		"notifications",
 		"background",

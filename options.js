@@ -8,37 +8,36 @@ function unsubscribeHandler() {
 }
 
 function subscribeHandler() {
-	var roomIdText = document.getElementById("room-id").value
+	var input = document.getElementById("room-id")
+	var roomIdText = input.value
 	var pattern = /^[0-9]+$/
+	// var subscription = getSubscription(roomIdText)
 	if (pattern.test(roomIdText) === false) {
-		showNotification("房号不合法", "目前PANDA.TV房间号只由数字组成.", false)
-		// feedback("error", "房号不合法: 目前PANDA.TV房间号只由数字组成.")
-		return 1
-	}
-
-	var info = requestInfoSync(roomIdText)
-	if (info.errno === 0) {
-		// var ul = document.getElementById("subscriptions")
-		// ul.appendChild(createItem(info.hostName, info.roomId))
-		subscribe(info)
-		// feedback("sucess", "成功订阅: " + info.hostName)
-		var msg = "该直播目前休息中."
-		var requireInteraction = false
-		if (info.status === "2") {
-			msg = "该主播目前正在直播，点击本通知观看。"
-			requireInteraction = true
-		}
-		showNotification("成功订阅: " + info.hostName, msg, requireInteraction)
-		return 0
+		feedback("error", "房间号只由数字组成")
+	} else if (getSubscription(roomIdText) !== null) {
+		feedback("error", "已经订阅过" + roomIdText + "房间")
 	} else {
-		showNotification("无法订阅", info.errmsg, false)
-		return 1
-		// feedback("error", "无法订阅: " + info.errmsg)
+		feedback("info", "正在向panda.tv查询" + roomIdText +"房间...")
+		requestInfo(roomIdText, function(info) {
+			if (info.errno === 0) {
+				subscribe(info)
+				feedback("sucess", "成功订阅: " + info.hostName)
+				addItem(info)
+				if (info.status === "2") {
+					showNotificationV2(info)
+				}
+			} else {
+				feedback("error", "无法订阅: " + info.errmsg)
+			}
+		})
 	}
-
-
+	input.value = ""
 }
 
+function clearInput() {
+	var input = document.getElementById("room-id")
+	input.value = ""
+}
 
 function createItem(host, id) {
 	var newItem = document.createElement("li")
@@ -54,15 +53,36 @@ function createItem(host, id) {
 	return newItem
 }
 
-(function initList() {
+function addItem(subscription) {
+	var ul = document.getElementById("subscriptions")
+	var li = createItem(subscription.hostName, subscription.roomId)
+	ul.appendChild(li)
+}
+
+function initList() {
 	var ul = document.getElementById("subscriptions")
 	var subscriptions = getSubscriptions()
 	for(var i = 0; i < subscriptions.length; i = i + 1) {
 		var li = createItem(subscriptions[i].hostName, subscriptions[i].roomId)
 		ul.appendChild(li)
 	}
-})()
+}
+
+function feedback(className, msg) {
+	var para = document.getElementById("feedback")
+	para.className = className
+	para.textContent = msg
+	para.style.visibility = "visible"
+	setTimeout(hideFeedback, 2500)
+}
+
+function hideFeedback() {
+	var para = document.getElementById("feedback")
+	para.style.visibility = "hidden"
+}
 
 //显示订阅列表
+hideFeedback()
+initList()
 
 document.getElementById("add-btn").addEventListener("click", subscribeHandler)

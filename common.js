@@ -33,7 +33,7 @@ function requestInfo(id, callback) {
 	}
 	xhr.responseType = "json"
 	xhr.onload = function() {
-		callback(kiss(xhr.response))
+		callback(kiss(xhr.response, "http://panda.tv/"))
 	}
 	xhr.send(null)
 }
@@ -42,18 +42,45 @@ function requestInfoSync(id) {
 	var xhr = new XMLHttpRequest()
 	xhr.open("GET", "http://www.panda.tv/api_room_v2?roomid=" + id, false)
 	xhr.send(null)
-	return kiss(JSON.parse(xhr.response))
+	return kiss(JSON.parse(xhr.response, "http://panda.tv/"))
 }
 
-function showNotification(title, message, requireInteraction) {
+function showNotification(title, message, requireInteraction, callback) {
 	var opt = {
 		type: "basic",
 		title: title,
 		iconUrl: "icon128.png",
 		message: message,
-		requireInteraction: requireInteraction
+		requireInteraction: requireInteraction || false
 	}
-	chrome.notifications.create(opt)
+	if (callback !== undefined) {
+		chrome.notifications.create(opt, callback)
+	} else {
+		chrome.notifications.create(opt)
+	}
+}
+
+function showNotificationV2(info) {
+	var opt = {
+		type: "image",
+		title: "活捉正在直播的" + info.hostName,
+		iconUrl: "icon128.png",
+		message: "『"+ info.roomName + "』, 点击观看",
+		imageUrl: info.roomImg,
+		requireInteraction: true,
+		isClickable: true
+	}
+	chrome.notifications.create(info.site + info.roomId, opt)
+}
+
+function addNotificationHandler() {
+	chrome.notifications.onClicked.addListener(function(id) {
+		chrome.notifications.clear(id)
+		var pattern = /^https*:\/\/.*/i
+		if (pattern.test(id)) {
+			chrome.tabs.create({url: id})
+		}
+	})
 }
 
 function getSubscriptions() {
@@ -63,7 +90,7 @@ function getSubscriptions() {
 
 function getSubscription(id) {
 	var subscriptions = getSubscriptions()
-	for (var i = 0; i < subscriptions.length; i++) {
+	for (var i = 0; i < subscriptions.length; i += 1) {
 		if (subscriptions[i].roomId === id) {
 			return subscriptions[i]
 		}
@@ -79,7 +106,7 @@ function saveSubscriptions(subscriptions) {
 
 function updateSubscriptions(info) {
 	var subscriptions = getSubscriptions()
-	for(var i = 0; i < subscriptions.length; i++) {
+	for(var i = 0; i < subscriptions.length; i += 1) {
 		if (subscriptions[i].roomId === info.roomId) {
 			subscriptions[i] = info
 			saveSubscriptions(subscriptions)
@@ -90,46 +117,47 @@ function updateSubscriptions(info) {
 	return 1
 }
 
-function subscribe(info) {
-	if (getSubscription(info.roomId) !== null) {
-		showNotification("您已订阅过该主播。", info.hostName, false)
-	} else {
-		var subscriptions = getSubscriptions()
-		subscriptions.push(info)
-		saveSubscriptions(subscriptions)
-		// showNotification("成功订阅主播：", info.hostName, false)
+function updateSubscription(oldValue, newValue) {
+	for (k in newValue) {
+		oldValue.k = newValue.k
 	}
+	return oldValue
+}
+
+function subscribe(info) {
+	var subscriptions = getSubscriptions()
+	subscriptions.push(info)
+	saveSubscriptions(subscriptions)
 }
 
 function unsubscribe(id) {
-	if (getSubscription(id) === null) {
-		showNotification("没有订阅该主播, 无法取消订阅：", id, false)
-		return 1
-	} else {
-		var subscriptions = getSubscriptions()
-		for(var i = 0; i < subscriptions.length; i++) {
-			if (subscriptions[i].roomId === id)	{
-				subscriptions.splice(i, 1)
-				saveSubscriptions(subscriptions)
-				return 0
-			}
+	var subscriptions = getSubscriptions()
+	for(var i = 0; i < subscriptions.length; i += 1) {
+		if (subscriptions[i].roomId === id)	{
+			subscriptions.splice(i, 1)
+			saveSubscriptions(subscriptions)
 		}
 	}
 }
 
-function kiss(responseJson) {
-	return {
-		hostName: responseJson.data.hostinfo.name,
-		hostAvartar: responseJson.data.hostinfo.avatar,
-		roomName: responseJson.data.roominfo.name,
-		roomId: responseJson.data.roominfo.id,
-		roomImg: responseJson.data.roominfo.pictures.img,
-		startTime: responseJson.data.roominfo.start_time * 1000,
-		endTime: responseJson.data.roominfo.end_time * 1000,
-		status: responseJson.data.videoinfo.status,
-		errno: responseJson.errno,
-		errmsg: responseJson.errmsg,
-		fetchTime: String((new Date()).valueOf())
+function kiss(responseJson, site) {
+	if (responseJson.errno !== 0) {
+		return responseJson
+	} else {
+		return {
+			hostName: responseJson.data.hostinfo.name,
+			hostAvartar: responseJson.data.hostinfo.avatar,
+			roomName: responseJson.data.roominfo.name,
+			roomId: responseJson.data.roominfo.id,
+			roomImg: responseJson.data.roominfo.pictures.img,
+			startTime: responseJson.data.roominfo.start_time * 1000,
+			endTime: responseJson.data.roominfo.end_time * 1000,
+			status: responseJson.data.videoinfo.status,
+			errno: responseJson.errno,
+			errmsg: responseJson.errmsg,
+			fetchTime: String((new Date()).valueOf()),
+			site: site
+		}
 	}
 }
 
@@ -137,15 +165,26 @@ function checkSubscription(info) {
 	var subscription = getSubscription(info.roomId)
 	if (info.errno !== 0) {
 		console.log("check host is online or not error.", info.errmsg)
-	} else if (info.status === "2" && subscription.status !== "2") {
-		showNotification("活捉正在直播的" + info.hostName, "点击本通知跳转观看", true)
+	} else {
+		updateSubscriptions(info)
+		if (info.status === "2" && subscription.status !== "2") {
+			showNotificationV2(info)
+		}
 	}
-	updateSubscriptions(info)
 }
 
 function checkSubscriptions() {
 	var subscriptions = getSubscriptions()
-	for(var i = 0; i < subscriptions.length; i++) {
+	for(var i = 0; i < subscriptions.length; i += 1) {
 		requestInfo(subscriptions[i].roomId, checkSubscription)
 	}
 }
+
+function setAll2Offline() {
+	var subscriptions = getSubscriptions()
+	for(var i = 0; i < subscriptions.length; i += 1) {
+		subscriptions[i].status = "3"
+	}
+	saveSubscriptions(subscriptions)
+}
+
