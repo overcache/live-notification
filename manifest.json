@@ -22,7 +22,7 @@
 		"storage",
 		"notifications",
 		"background",
-		"tabs",
+		// "tabs",
 		"alarms"
 	],
 	"options_ui": {
