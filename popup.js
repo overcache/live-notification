@@ -2,15 +2,36 @@
 
 //info{host,status,startTime,endTime,roomName, roomId}
 function createDiv(subscription) {
-	var newDiv = document.createElement("div")
-	newDiv.className = "host"
-	var newH2 = document.createElement("h2")
-	newH2.textContent = subscription.hostName
-	var newHr = document.createElement("hr")
-	var newUl = document.createElement("ul")
-	var names = ["查询时间: ", "状态: ", "房间: ", "最近直播: "]
-	var status = ""
-	var time = ""
+	var hostDiv = document.createElement("div")
+	hostDiv.className = (subscription.status === "2") ? "host online" : "host offline"
+	var headDiv = document.createElement("div")
+	headDiv.className = "head-div"
+
+	var avatarImg = document.createElement("img")
+	avatarImg.src = subscription.hostAvartar
+	// avatarImg.width = "64"
+	avatarImg.className = "avartar"
+	headDiv.appendChild(avatarImg)
+
+	var hostNameSpan = document.createElement("span")
+	hostNameSpan.textContent = subscription.hostName
+	hostNameSpan.className = "host-name"
+	headDiv.appendChild(hostNameSpan)
+
+	var roomNameSpan = document.createElement("span")
+	roomNameSpan.textContent = subscription.roomName
+	roomNameSpan.className = "room-name"
+	headDiv.appendChild(roomNameSpan)
+
+	var statusSpan = document.createElement("span")
+	statusSpan.textContent = subscription.status === "2" ? "直播中" : "休息"
+	statusSpan.className = subscription.status === "2" ? "status online" : "status offline"
+	headDiv.appendChild(statusSpan)
+
+
+	var ulEl = document.createElement("ul")
+
+
 	var now = (new Date()).valueOf()
 	var fetchTime = Math.round((now - subscription.fetchTime) / 60000)
 	var fetchmsg = fetchTime + " 分钟前"
@@ -18,51 +39,52 @@ function createDiv(subscription) {
 		fetchmsg = "刚刚"
 	}
 
+	var time = formatTime(new Date(subscription.startTime)) + " <=> "
 	if (subscription.status === "2") {
-		status = "正在直播"
-		time = formatTime(new Date(subscription.startTime)) + " ~ 现在"
+		time = time + "现在"
 	} else {
-		status = "休息中"
-		time = formatTime(new Date(subscription.startTime)) + " ~ " + formatTime(new Date(subscription.endTime))
+		time = time + formatTime(new Date(subscription.endTime))
 	}
-	var values = [fetchmsg, status, subscription.roomName, time]
+
+	var names = ["查询时间: ", "发车时间: "]
+	var values = [fetchmsg, time]
 	for(var i = 0; i < names.length; i = i + 1) {
-		var newItem = document.createElement("li")
+		var liEl = document.createElement("li")
+		var nameSpan = document.createElement("span")
+		nameSpan.textContent = names[i]
+		nameSpan.className = "name"
+		liEl.appendChild(nameSpan)
 
-		var newNameSpan = document.createElement("span")
-		newNameSpan.textContent = names[i]
-		newItem.appendChild(newNameSpan)
-		newNameSpan.className = "name"
-
-		var newValueEl
-		if (i === 1) {
-			newValueEl = document.createElement("a")
-			newValueEl.className = "value " + (subscription.status === "2" ? "online" : "offline")
-		} else {
-			newValueEl = document.createElement("span")
-			newValueEl.className = "value"
-		}
-		newValueEl.textContent = values[i]
-		newItem.appendChild(newValueEl)
-		newUl.appendChild(newItem)
+		var valueSpan = document.createElement("span")
+		valueSpan.textContent = values[i]
+		valueSpan.className = "value"
+		liEl.appendChild(valueSpan)
+		ulEl.appendChild(liEl)
 	}
-	newDiv.appendChild(newH2)
-	newDiv.appendChild(newUl)
-	newDiv.appendChild(newHr)
 
-	newDiv.addEventListener("click", function() {
+	hostDiv.appendChild(headDiv)
+	hostDiv.appendChild(ulEl)
+	// hostDiv.appendChild(document.createElement("hr"))
+
+	hostDiv.addEventListener("click", function() {
 		chrome.tabs.create({url: subscription.site + subscription.roomId})
 	})
 
-	return newDiv
+	return hostDiv
 }
 
 
 var subscriptions = getSubscriptions()
+var paraEl = document.getElementById("empty")
 var content = document.getElementById("content")
+if (subscriptions.length !== 0) {
+	// empty.setAttribute("display", "none")
+	document.body.removeChild(paraEl)
+}
 for(var i = 0; i < subscriptions.length; i += 1) {
 	var el = createDiv(subscriptions[i])
 	content.appendChild(el)
 }
+
 
 document.getElementById("go-to-options").addEventListener("click", openOptionsPage)

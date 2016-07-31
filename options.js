@@ -1,10 +1,12 @@
 function unsubscribeHandler() {
-	var ul = document.getElementById("subscriptions")
-	var item = this.parentElement
-	var roomIdText = this.previousSibling.title
+	var ulEl = document.getElementById("subscriptions")
+	var liEl = this.parentElement
+	var roomSpan = this.previousSibling
+	var roomIdText = roomSpan.title
 
 	unsubscribe(roomIdText)
-	ul.removeChild(item)
+	ulEl.removeChild(liEl)
+	feedback("sucess", "不在关注" + roomSpan.textContent)
 }
 
 function subscribeHandler() {
@@ -13,21 +15,21 @@ function subscribeHandler() {
 	var pattern = /^[0-9]+$/
 	// var subscription = getSubscription(roomIdText)
 	if (pattern.test(roomIdText) === false) {
-		feedback("error", "房间号只由数字组成")
+		feedback("error", "房号只由数字组成")
 	} else if (getSubscription(roomIdText) !== null) {
-		feedback("error", "已经订阅过" + roomIdText + "房间")
+		feedback("error", "已经添加过该主播")
 	} else {
-		feedback("info", "正在向panda.tv查询" + roomIdText +"房间...")
+		feedback("info", "正在向panda.tv获取房间信息...")
 		requestInfo(roomIdText, function(info) {
 			if (info.errno === 0) {
 				subscribe(info)
-				feedback("sucess", "成功订阅: " + info.hostName)
+				feedback("sucess", "成功添加主播: " + info.hostName)
 				addItem(info)
 				if (info.status === "2") {
 					showNotificationV2(info)
 				}
 			} else {
-				feedback("error", "无法订阅: " + info.errmsg)
+				feedback("error", "无法添加主播: " + info.errmsg)
 			}
 		})
 	}
@@ -45,7 +47,7 @@ function createItem(host, id) {
 	newSpan.textContent = host
 	newSpan.title = id
 	var newButton = document.createElement("button")
-	newButton.textContent = "取消订阅"
+	newButton.textContent = "取消关注"
 	newButton.className = "del-btn"
 	newButton.addEventListener("click", unsubscribeHandler)
 	newItem.appendChild(newSpan)

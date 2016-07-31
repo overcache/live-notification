@@ -5,6 +5,11 @@ body {
 	color: #333;
 }
 
+p#empty {
+	padding-top: 20px;
+	/*display: none;*/
+	text-align: center;
+}
 div#content {
 	width: 100%;
 	padding: 0;
@@ -13,19 +18,33 @@ div#content {
 }
 
 div.host {
-	padding: 0 10px;
+	padding: 5px 10px;
+	margin-bottom: 10px;
+	opacity: 0.8;
 }
 
 div.host:hover {
+	color: #000;
 	background-color: #eee;
+	opacity: 1.0;
 	cursor: pointer;
 }
-div.host:hover a {
+div.host:hover .status {
 	background-color: blue;
+}
+div.offline {
+	/*color: #aaa;*/
 }
 
 h2 {
 	/*text-align: center;*/
+	margin-bottom: 2px;
+}
+
+h2 span {
+	display: inline-block;
+	font-size: 10px;
+	margin-left: 10px;
 }
 
 ul {
@@ -44,17 +63,6 @@ span {
 	padding: 2px 5px;
 }
 
-a {
-	display: inline-block;
-	padding: 2px 5px;
-	text-decoration: none;
-}
-
-a:hover {
-	/*border-bottom: 3px solid blue;*/
-	background-color: blue;
-}
-
 span.name {
 	width: 20%;
 	/*text-align: right*/
@@ -64,14 +72,41 @@ span.value {
 	/*width: 75%;*/
 }
 
-.online {
-	/*margin: 5px;*/
-	background-color: red;
+div.head-div {
+	/*width: 150px;*/
+	overflow: hidden;
+	margin-bottom: 3px;
+}
+
+.avartar {
+	width: 70px;
+	height: 70px;
+	display: block;
+	float: left;
+}
+
+div.head-div span {
+	display: block;
+	float: left;
+}
+
+span.host-name {
+	width: 180px;
+	margin: 2px 2px 0;
+}
+span.room-name {
+	width: 180px;
+	margin: 0 2px;
+}
+span.status {
+	margin: 2px 8px;
 	color: white;
 }
-.offline {
+span.online {
+	background-color: red;
+}
+span.offline {
 	background-color: green;
-	color: white;
 }
 
 hr {
@@ -84,5 +119,6 @@ button {
 	padding: 5px 15px;
 	float: right;
 	margin-right: 10px;
-	/*margin-bottom: -10px;*/
+	margin-bottom: 10px;
 }
+

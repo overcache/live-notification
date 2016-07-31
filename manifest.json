@@ -23,7 +23,8 @@
 		"storage",
 		"notifications",
 		"background",
-		"tabs"
+		"tabs",
+		"alarms"
 	],
 	"options_ui": {
 		"page": "options.html"

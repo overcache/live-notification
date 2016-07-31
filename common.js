@@ -13,7 +13,7 @@ function formatTime(time) {
 	var h = addNumPadding(time.getHours())
 	var mm = addNumPadding(time.getMinutes())
 	// var s = addNumPadding(time.getSeconds())
-	return `${m}月${d}日 ${h}:${mm}`
+	return `${m}-${d} ${h}:${mm}`
 }
 
 function openOptionsPage() {
@@ -63,9 +63,9 @@ function showNotification(title, message, requireInteraction, callback) {
 function showNotificationV2(info) {
 	var opt = {
 		type: "image",
-		title: "活捉正在直播的" + info.hostName,
+		title: info.hostName + "发车了!!!",
 		iconUrl: "icon128.png",
-		message: "『"+ info.roomName + "』, 点击观看",
+		message: "车次『"+ info.roomName + "』, 点击通知上车!",
 		imageUrl: info.roomImg,
 		requireInteraction: true,
 		isClickable: true
@@ -115,13 +115,6 @@ function updateSubscriptions(info) {
 	}
 	console.log("没有订阅该主播，无法更新状态")
 	return 1
-}
-
-function updateSubscription(oldValue, newValue) {
-	for (k in newValue) {
-		oldValue.k = newValue.k
-	}
-	return oldValue
 }
 
 function subscribe(info) {
@@ -186,5 +179,14 @@ function setAll2Offline() {
 		subscriptions[i].status = "3"
 	}
 	saveSubscriptions(subscriptions)
+}
+
+function addAlarmHandler() {
+	chrome.alarms.onAlarm.addListener(function(alarm) {
+		console.log("alarm " + alarm.name + " has been fired at ", Date())
+		if (alarm.name === "checkSubscriptions") {
+			checkSubscriptions()
+		}
+	})
 }
 
