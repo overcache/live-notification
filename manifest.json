@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "开播提醒",
-	"version": "1.0",
+	"version": "1.0.1",
 
 	"description": "关注Panda.tv主播，开播时发送提醒",
 	"icons": {
@@ -22,7 +22,6 @@
 		"storage",
 		"notifications",
 		"background",
-		// "tabs",
 		"alarms"
 	],
 	"options_ui": {
