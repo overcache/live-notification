@@ -1,4 +1,3 @@
-//TODO: 当用户没有订阅任何主播时，提供提示
 
 //info{host,status,startTime,endTime,roomName, roomId}
 function createDiv(subscription) {

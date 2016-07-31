@@ -6,7 +6,7 @@ function unsubscribeHandler() {
 
 	unsubscribe(roomIdText)
 	ulEl.removeChild(liEl)
-	feedback("sucess", "不在关注" + roomSpan.textContent)
+	feedback("sucess", "不再关注" + roomSpan.textContent)
 }
 
 function subscribeHandler() {

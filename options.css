@@ -2,7 +2,6 @@ body {
 	width: 340px;
 	margin: 20px auto;
 	font-size: 14px;
-	/*border: 1px solid red;*/
 	color: #333;
 }
 h2 {
@@ -13,8 +12,6 @@ ul {
 	padding: 0;
 	margin: 0 auto;
 	list-style: none;
-	/*vertical-align: center;*/
-	/*border: 1px solid red;*/
 }
 ul li {
 	width: 100%;
@@ -57,7 +54,6 @@ span {
 hr {
 	border: 0;
 	border-bottom: 1px solid #ccc;
-	/*box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);*/
 }
 
 div#form-wrap {
