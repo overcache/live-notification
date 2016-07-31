@@ -3,8 +3,7 @@
 	"name": "开播提醒",
 	"version": "1.0",
 
-	// "default_locale": "zh_cn",
-	"description": "关注直播平台的主播，开播时发送提醒",
+	"description": "关注Panda.tv主播，开播时发送提醒",
 	"icons": {
 		"128": "icon128.png"
 	},
@@ -28,6 +27,5 @@
 	],
 	"options_ui": {
 		"page": "options.html"
-		// "chrome_style": true
 	}
 }
